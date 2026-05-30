@@ -1,0 +1,366 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "bbox": [
+        93.9475,
+        9.3399,
+        93.9475,
+        9.3399
+      ],
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          93.9475,
+          9.3399
+        ]
+      },
+      "properties": {
+        "eventtype": "EQ",
+        "eventid": 1412259,
+        "episodeid": 1549586,
+        "eventname": "",
+        "glide": "",
+        "name": "Earthquake in India",
+        "description": "Earthquake in India",
+        "htmldescription": "Green M 4.5 Earthquake in India at: 21 Jan 2024 04:06:23.",
+        "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/EQ.png",
+        "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/EQ.png",
+        "url": {
+          "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=EQ&eventid=1412259&episodeid=1549586",
+          "report": "https://www.gdacs.org/report.aspx?eventid=1412259&episodeid=1549586&eventtype=EQ",
+          "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=EQ&eventid=1412259"
+        },
+        "alertlevel": "Green",
+        "alertscore": 1,
+        "episodealertlevel": "Green",
+        "episodealertscore": 0,
+        "istemporary": "false",
+        "iscurrent": "false",
+        "country": "India",
+        "fromdate": "2024-01-21T04:06:23",
+        "todate": "2024-01-21T04:06:23",
+        "datemodified": "2024-01-27T22:27:03",
+        "iso3": "IND",
+        "source": "NEIC",
+        "sourceid": "",
+        "polygonlabel": "Centroid",
+        "Class": "Point_Centroid",
+        "affectedcountries": [
+          {
+            "iso2": "IN",
+            "iso3": "IND",
+            "countryname": "India"
+          }
+        ],
+        "severitydata": {
+          "severity": 4.5,
+          "severitytext": "Magnitude 4.5M, Depth:10km",
+          "severityunit": "M"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "bbox": [
+        94.0269,
+        9.4027,
+        94.0269,
+        9.4027
+      ],
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          94.0269,
+          9.4027
+        ]
+      },
+      "properties": {
+        "eventtype": "EQ",
+        "eventid": 1411427,
+        "episodeid": 1548489,
+        "eventname": "",
+        "glide": "",
+        "name": "Earthquake in India",
+        "description": "Earthquake in India",
+        "htmldescription": "Green M 5 Earthquake in India at: 20 Jan 2024 01:36:11.",
+        "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/EQ.png",
+        "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/EQ.png",
+        "url": {
+          "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=EQ&eventid=1411427&episodeid=1548489",
+          "report": "https://www.gdacs.org/report.aspx?eventid=1411427&episodeid=1548489&eventtype=EQ",
+          "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=EQ&eventid=1411427"
+        },
+        "alertlevel": "Green",
+        "alertscore": 1,
+        "episodealertlevel": "Green",
+        "episodealertscore": 0,
+        "istemporary": "false",
+        "iscurrent": "false",
+        "country": "India",
+        "fromdate": "2024-01-20T01:36:11",
+        "todate": "2024-01-20T01:36:11",
+        "datemodified": "2024-01-20T02:05:22",
+        "iso3": "IND",
+        "source": "NEIC",
+        "sourceid": "",
+        "polygonlabel": "Centroid",
+        "Class": "Point_Centroid",
+        "affectedcountries": [
+          {
+            "iso2": "IN",
+            "iso3": "IND",
+            "countryname": "India"
+          }
+        ],
+        "severitydata": {
+          "severity": 5,
+          "severitytext": "Magnitude 5M, Depth:10km",
+          "severityunit": "M"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "bbox": [
+        93.2342,
+        11.7544,
+        93.2342,
+        11.7544
+      ],
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          93.2342,
+          11.7544
+        ]
+      },
+      "properties": {
+        "eventtype": "EQ",
+        "eventid": 1410083,
+        "episodeid": 1547901,
+        "eventname": "",
+        "glide": "",
+        "name": "Earthquake in India",
+        "description": "Earthquake in India",
+        "htmldescription": "Green M 4.5 Earthquake in India at: 10 Jan 2024 02:23:44.",
+        "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/EQ.png",
+        "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/EQ.png",
+        "url": {
+          "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=EQ&eventid=1410083&episodeid=1547901",
+          "report": "https://www.gdacs.org/report.aspx?eventid=1410083&episodeid=1547901&eventtype=EQ",
+          "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=EQ&eventid=1410083"
+        },
+        "alertlevel": "Green",
+        "alertscore": 1,
+        "episodealertlevel": "Green",
+        "episodealertscore": 0,
+        "istemporary": "false",
+        "iscurrent": "false",
+        "country": "India",
+        "fromdate": "2024-01-10T02:23:44",
+        "todate": "2024-01-10T02:23:44",
+        "datemodified": "2024-01-15T22:25:07",
+        "iso3": "IND",
+        "source": "NEIC",
+        "sourceid": "",
+        "polygonlabel": "Centroid",
+        "Class": "Point_Centroid",
+        "affectedcountries": [
+          {
+            "iso2": "IN",
+            "iso3": "IND",
+            "countryname": "India"
+          }
+        ],
+        "severitydata": {
+          "severity": 4.5,
+          "severitytext": "Magnitude 4.5M, Depth:84.516km",
+          "severityunit": "M"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "bbox": [
+        92.7945,
+        11.8116,
+        92.7945,
+        11.8116
+      ],
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          92.7945,
+          11.8116
+        ]
+      },
+      "properties": {
+        "eventtype": "EQ",
+        "eventid": 1409795,
+        "episodeid": 1546678,
+        "eventname": "",
+        "glide": "",
+        "name": "Earthquake in India",
+        "description": "Earthquake in India",
+        "htmldescription": "Green M 4.6 Earthquake in India at: 08 Jan 2024 05:05:32.",
+        "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/EQ.png",
+        "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/EQ.png",
+        "url": {
+          "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=EQ&eventid=1409795&episodeid=1546678",
+          "report": "https://www.gdacs.org/report.aspx?eventid=1409795&episodeid=1546678&eventtype=EQ",
+          "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=EQ&eventid=1409795"
+        },
+        "alertlevel": "Green",
+        "alertscore": 1,
+        "episodealertlevel": "Green",
+        "episodealertscore": 0,
+        "istemporary": "false",
+        "iscurrent": "false",
+        "country": "India",
+        "fromdate": "2024-01-08T05:05:32",
+        "todate": "2024-01-08T05:05:32",
+        "datemodified": "2024-01-08T06:23:22",
+        "iso3": "IND",
+        "source": "NEIC",
+        "sourceid": "",
+        "polygonlabel": "Centroid",
+        "Class": "Point_Centroid",
+        "affectedcountries": [
+          {
+            "iso2": "IN",
+            "iso3": "IND",
+            "countryname": "India"
+          }
+        ],
+        "severitydata": {
+          "severity": 4.6,
+          "severitytext": "Magnitude 4.6M, Depth:56.96km",
+          "severityunit": "M"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "bbox": [
+        77.713,
+        15.954,
+        77.713,
+        15.954
+      ],
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.713,
+          15.954
+        ]
+      },
+      "properties": {
+        "eventtype": "DR",
+        "eventid": 1016764,
+        "episodeid": 7,
+        "eventname": "South-East India-2023",
+        "glide": "",
+        "name": "Drought in India",
+        "description": "Drought in India",
+        "htmldescription": "Green Drought in India from: 21 Oct 2023  to: 11 Feb 2024 .",
+        "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/DR.png",
+        "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/DR.png",
+        "url": {
+          "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=DR&eventid=1016764&episodeid=7",
+          "report": "https://www.gdacs.org/report.aspx?eventid=1016764&episodeid=7&eventtype=DR",
+          "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=DR&eventid=1016764"
+        },
+        "alertlevel": "Green",
+        "alertscore": 1,
+        "episodealertlevel": "Green",
+        "episodealertscore": 0.25,
+        "istemporary": "false",
+        "iscurrent": "false",
+        "country": "India",
+        "fromdate": "2023-10-21T00:00:00",
+        "todate": "2024-02-11T00:00:00",
+        "datemodified": "2024-02-13T10:08:10",
+        "iso3": "IND",
+        "source": "GDO",
+        "sourceid": "",
+        "polygonlabel": "Centroid",
+        "Class": "Point_Centroid",
+        "affectedcountries": [
+          {
+            "iso2": "IN",
+            "iso3": "IND",
+            "countryname": "India"
+          }
+        ],
+        "severitydata": {
+          "severity": 50828,
+          "severitytext": "Minor impact for agricultural drought in 50828 km2",
+          "severityunit": "km2"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "bbox": [
+        83.5,
+        25.5,
+        83.5,
+        25.5
+      ],
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          83.5,
+          25.5
+        ]
+      },
+      "properties": {
+        "eventtype": "DR",
+        "eventid": 1016287,
+        "episodeid": 15,
+        "eventname": "North-East India-2023",
+        "glide": "",
+        "name": "Drought in India",
+        "description": "Drought in India",
+        "htmldescription": "Green Drought in India from: 21 Mar 2023  to: 02 Jan 2024 .",
+        "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/DR.png",
+        "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/DR.png",
+        "url": {
+          "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=DR&eventid=1016287&episodeid=15",
+          "report": "https://www.gdacs.org/report.aspx?eventid=1016287&episodeid=15&eventtype=DR",
+          "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=DR&eventid=1016287"
+        },
+        "alertlevel": "Green",
+        "alertscore": 1,
+        "episodealertlevel": "Green",
+        "episodealertscore": 0.25,
+        "istemporary": "false",
+        "iscurrent": "false",
+        "country": "India",
+        "fromdate": "2023-03-21T00:00:00",
+        "todate": "2024-01-02T00:00:00",
+        "datemodified": "2024-01-04T14:17:25",
+        "iso3": "IND",
+        "source": "GDO",
+        "sourceid": "",
+        "polygonlabel": "Centroid",
+        "Class": "Point_Centroid",
+        "affectedcountries": [
+          {
+            "iso2": "IN",
+            "iso3": "IND",
+            "countryname": "India"
+          }
+        ],
+        "severitydata": {
+          "severity": 11138,
+          "severitytext": "Minor impact for agricultural drought in 11138 km2",
+          "severityunit": "km2"
+        }
+      }
+    }
+  ],
+  "source": "Global Disaster Awareness and Coordination System, GDACS"
+}
