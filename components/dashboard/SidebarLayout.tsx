@@ -1,9 +1,15 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Sidebar, type TabId } from "@/components/dashboard/Sidebar";
 import { signOut } from "@/lib/auth/actions";
+
+const AiResponseDashboard = dynamic(
+  () => import("@/components/ai-response/AiResponseDashboard").then((m) => m.AiResponseDashboard),
+  { ssr: false },
+);
 
 type SidebarLayoutProps = {
   children: React.ReactNode;
@@ -23,12 +29,13 @@ const PlaceholderContent = ({ label }: { label: string }) => (
 
 const TAB_CONTENT: Record<TabId, { label: string }> = {
   operations: { label: "Operations Dashboard" },
+  "disaster-map": { label: "Disaster Map" },
+  "ai-intel": { label: "AI Disaster Intelligence" },
   "rescue-teams": { label: "Rescue Teams" },
   hospitals: { label: "Hospitals and Shelters" },
   analytics: { label: "Incident History and Analytics" },
   "data-contribution": { label: "Data Contribution Feature" },
   sos: { label: "SOS Form" },
-  simulator: { label: "Decision Simulator" },
 };
 
 export const SidebarLayout = ({
@@ -76,6 +83,7 @@ export const SidebarLayout = ({
 
   const content = useMemo(() => {
     if (activeTab === "operations") return children;
+    if (activeTab === "ai-intel") return <AiResponseDashboard />;
     return <PlaceholderContent label={TAB_CONTENT[activeTab].label} />;
   }, [activeTab, children]);
 
