@@ -3,7 +3,7 @@
 import "leaflet/dist/leaflet.css";
 
 import L from "leaflet";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import { useDisasterStore } from "@/lib/store/disasterStore";
 import { normalizeEonetEvents, type EonetFeatureCollection } from "@/lib/map/eonet";
@@ -12,6 +12,8 @@ import { normalizeUsgsEvents, type UsgsFeatureCollection } from "@/lib/map/usgs"
 import { EonetEventsLayer } from "@/components/EonetEventsLayer";
 import { GdacsEventsLayer } from "@/components/GdacsEventsLayer";
 import { UsgsEarthquakeLayer } from "@/components/ai-response/UsgsEarthquakeLayer";
+import { FacilitiesLayer } from "@/components/ai-response/FacilitiesLayer";
+import type { FacilitiesData } from "@/lib/facilities/types";
 import { INDIA_BOUNDS, INDIA_CENTER, INDIA_DEFAULT_ZOOM } from "@/lib/map/india-bounds";
 
 const PLACED_ICON = L.divIcon({
@@ -36,6 +38,48 @@ function MapBoundsFitter() {
   useEffect(() => {
     map.fitBounds(INDIA_BOUNDS, { padding: [30, 30] });
   }, [map]);
+  return null;
+}
+
+function RadarLayer({ active }: { active: boolean }) {
+  const map = useMap();
+  const [tileUrl, setTileUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!active) return;
+
+    let cancelled = false;
+
+    fetch("https://api.rainviewer.com/public/weather-maps.json")
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        const past = data.past ?? [];
+        if (past.length === 0) return;
+        const latest = past[past.length - 1];
+        setTileUrl(
+          `https://tilecache.rainviewer.com${latest.path}/256/{z}/{x}/{y}.png`,
+        );
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [active]);
+
+  useEffect(() => {
+    if (!tileUrl || !active) return;
+    const layer = L.tileLayer(tileUrl, {
+      opacity: 0.45,
+      zIndex: 500,
+    });
+    layer.addTo(map);
+    return () => {
+      map.removeLayer(layer);
+    };
+  }, [tileUrl, active, map]);
+
   return null;
 }
 
@@ -71,9 +115,14 @@ type AiResponseMapProps = {
   showEonet: boolean;
   showGdacs: boolean;
   showUsgs: boolean;
+  showRadar: boolean;
+  showFacilities: boolean;
+  facilitiesData: FacilitiesData | null;
   onToggleEonet: () => void;
   onToggleGdacs: () => void;
   onToggleUsgs: () => void;
+  onToggleRadar: () => void;
+  onToggleFacilities: () => void;
 };
 
 export function AiResponseMap({
@@ -83,9 +132,14 @@ export function AiResponseMap({
   showEonet,
   showGdacs,
   showUsgs,
+  showRadar,
+  showFacilities,
+  facilitiesData,
   onToggleEonet,
   onToggleGdacs,
   onToggleUsgs,
+  onToggleRadar,
+  onToggleFacilities,
 }: AiResponseMapProps) {
   const latitude = useDisasterStore((s) => s.situation.latitude);
   const longitude = useDisasterStore((s) => s.situation.longitude);
@@ -112,6 +166,8 @@ export function AiResponseMap({
         />
         <MapClickHandler />
         {!hasLiveData && <MapBoundsFitter />}
+        <RadarLayer active={showRadar} />
+        <FacilitiesLayer data={facilitiesData} visible={showFacilities} />
         {showEonet && <EonetEventsLayer events={eonet} />}
         {showGdacs && (
           <GdacsEventsLayer
@@ -159,6 +215,18 @@ export function AiResponseMap({
             active={showUsgs}
             color="#dc2626"
             onToggle={onToggleUsgs}
+          />
+          <LayerToggle
+            label="RainViewer Radar"
+            active={showRadar}
+            color="#06b6d4"
+            onToggle={onToggleRadar}
+          />
+          <LayerToggle
+            label="Emergency Facilities"
+            active={showFacilities}
+            color="#f59e0b"
+            onToggle={onToggleFacilities}
           />
         </div>
       </div>
@@ -239,7 +307,41 @@ export function AiResponseMap({
               ))}
             </>
           )}
-          {(showEonet || showGdacs || showUsgs) && <div className="my-1.5 border-t border-slate-800" />}
+          {showRadar && (
+            <>
+              {(showEonet || showGdacs || showUsgs) && <div className="my-1.5 border-t border-slate-800" />}
+              <p className="text-[9px] font-medium uppercase tracking-wider text-cyan-400/70">
+                Radar
+              </p>
+              <div className="flex items-center gap-1.5">
+                <span className="inline-block h-2.5 w-2.5 shrink-0 rounded-sm border border-cyan-500/50 bg-cyan-500/20" />
+                <span className="text-[11px] text-slate-400">Precipitation</span>
+              </div>
+            </>
+          )}
+          {showFacilities && (
+            <>
+              <div className="my-1.5 border-t border-slate-800" />
+              <p className="text-[9px] font-medium uppercase tracking-wider text-amber-400/70">
+                Facilities
+              </p>
+              {[
+                { label: "Hospitals", color: "#dc2626" },
+                { label: "Police Stations", color: "#2563eb" },
+                { label: "Fire Stations", color: "#ea580c" },
+                { label: "Shelters", color: "#16a34a" },
+              ].map(({ label, color }) => (
+                <div key={label} className="flex items-center gap-1.5">
+                  <span
+                    className="inline-block h-2.5 w-2.5 shrink-0 rounded-full border border-white/30"
+                    style={{ backgroundColor: color }}
+                  />
+                  <span className="text-[11px] text-slate-400">{label}</span>
+                </div>
+              ))}
+            </>
+          )}
+          {(showEonet || showGdacs || showUsgs || showRadar || showFacilities) && <div className="my-1.5 border-t border-slate-800" />}
           <div className="flex items-center gap-1.5">
             <span
               className="inline-block h-3 w-3 shrink-0 rounded-full border-2 border-white"

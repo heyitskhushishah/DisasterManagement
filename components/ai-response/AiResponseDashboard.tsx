@@ -4,9 +4,14 @@ import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 
 import { DisasterSituationAnalysis } from "@/components/ai-response/DisasterSituationAnalysis";
+import { FacilitiesPanel } from "@/components/ai-response/FacilitiesPanel";
+import { WeatherPanel } from "@/components/ai-response/WeatherPanel";
+import { useDisasterStore } from "@/lib/store/disasterStore";
 import { EMPTY_EONET_EVENTS, type EonetFeatureCollection } from "@/lib/map/eonet";
 import { EMPTY_GDACS_EVENTS, normalizeGdacsEvents, type GdacsFeatureCollection } from "@/lib/map/gdacs";
 import { EMPTY_USGS_EVENTS, formatUsgsTime, type UsgsFeatureCollection } from "@/lib/map/usgs";
+import type { FacilitiesData } from "@/lib/facilities/types";
+import type { WeatherData } from "@/lib/weather/types";
 import { cn } from "@/lib/utils";
 
 const AiResponseMap = dynamic(
@@ -35,19 +40,9 @@ const AI_INSIGHTS = [
   { risk: "Flood waters may reach 3 more districts", confidence: "74%", impact: "Bihar central" },
 ];
 
-const WEATHER = {
-  temperature: "31°C",
-  condition: "Partly Cloudy",
-  humidity: "72%",
-  windSpeed: "24 km/h",
-  visibility: "6 km",
-};
 
-const FACILITIES = [
-  { name: "City Hospital", beds: 340, available: 42, distance: "1.2 km" },
-  { name: "Red Cross Shelter", capacity: 500, occupied: 380, distance: "3.5 km" },
-  { name: "Field Hospital Alpha", beds: 120, available: 78, distance: "5.0 km" },
-];
+
+
 
 const RECOMMENDATIONS = [
   "Deploy 2 additional rescue teams to Patna flood region",
@@ -123,14 +118,36 @@ export function AiResponseDashboard() {
   const [showEonet, setShowEonet] = useState(true);
   const [showUsgs, setShowUsgs] = useState(true);
   const [showGdacs, setShowGdacs] = useState(true);
+  const [showRadar, setShowRadar] = useState(false);
+
+  const latitude = useDisasterStore((s) => s.situation.latitude);
+  const longitude = useDisasterStore((s) => s.situation.longitude);
+
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [weatherLoading, setWeatherLoading] = useState(true);
+  const [weatherError, setWeatherError] = useState<string | null>(null);
+
+  const [facilities, setFacilities] = useState<FacilitiesData | null>(null);
+  const [facilitiesLoading, setFacilitiesLoading] = useState(false);
+  const [facilitiesError, setFacilitiesError] = useState<string | null>(null);
+  const [facilityRadius, setFacilityRadius] = useState(25000);
+  const [showFacilities, setShowFacilities] = useState(true);
+
+  const weatherUrl = useMemo(() => {
+    if (latitude != null && longitude != null) {
+      return `/api/weather?lat=${latitude}&lng=${longitude}`;
+    }
+    return "/api/weather";
+  }, [latitude, longitude]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [eonetRes, usgsRes, gdacsRes] = await Promise.all([
+        const [eonetRes, usgsRes, gdacsRes, weatherRes] = await Promise.all([
           fetch("/api/eonet"),
           fetch("/api/usgs/earthquake"),
           fetch("/api/gdacs/events"),
+          fetch(weatherUrl),
         ]);
 
         if (eonetRes.ok) {
@@ -145,14 +162,52 @@ export function AiResponseDashboard() {
           const gdacs = await gdacsRes.json();
           setGdacsEvents(normalizeGdacsEvents(gdacs));
         }
+        if (weatherRes.ok) {
+          const w = await weatherRes.json();
+          if (w.cities?.length) setWeather(w);
+          setWeatherError(null);
+        } else {
+          const err = await weatherRes.json().catch(() => ({ error: "Unknown error" }));
+          setWeatherError(err.error ?? `Request failed (${weatherRes.status})`);
+        }
       } catch {
         console.warn("Failed to fetch live event data");
+        setWeatherError("Network error fetching weather");
       } finally {
         setLoading(false);
+        setWeatherLoading(false);
       }
     };
     fetchData();
-  }, []);
+  }, [weatherUrl]);
+
+  const hasFacilityLocation = latitude != null && longitude != null;
+
+  useEffect(() => {
+    if (!hasFacilityLocation) return;
+    const fetchFacilities = async () => {
+      setFacilitiesLoading(true);
+      setFacilitiesError(null);
+      try {
+        const res = await fetch(
+          `/api/facilities?lat=${latitude}&lng=${longitude}&radius=${facilityRadius}`,
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (data.facilities) setFacilities(data);
+          setFacilitiesError(null);
+        } else {
+          const err = await res.json().catch(() => ({ error: "Request failed" }));
+          setFacilitiesError(err.error ?? `Error ${res.status}`);
+        }
+      } catch {
+        setFacilitiesError("Network error fetching facilities");
+      } finally {
+        setFacilitiesLoading(false);
+      }
+    };
+    fetchFacilities();
+  }, [latitude, longitude, facilityRadius, hasFacilityLocation]);
 
   const displayEvents: DisplayEvent[] = useMemo(() => {
     const events: DisplayEvent[] = [];
@@ -359,51 +414,32 @@ export function AiResponseDashboard() {
               showEonet={showEonet}
               showGdacs={showGdacs}
               showUsgs={showUsgs}
+              showRadar={showRadar}
+              showFacilities={showFacilities}
+              facilitiesData={facilities}
               onToggleEonet={() => setShowEonet((v) => !v)}
               onToggleGdacs={() => setShowGdacs((v) => !v)}
               onToggleUsgs={() => setShowUsgs((v) => !v)}
+              onToggleRadar={() => setShowRadar((v) => !v)}
+              onToggleFacilities={() => setShowFacilities((v) => !v)}
             />
           </div>
         </section>
 
         <aside className="flex flex-col gap-4 lg:w-[20%]">
           <PanelCard title="Weather">
-            <div className="space-y-2">
-              {Object.entries(WEATHER).map(([key, val]) => (
-                <div
-                  key={key}
-                  className="flex items-center justify-between text-sm"
-                >
-                  <span className="text-slate-400">
-                    {key.replace(/([A-Z])/g, " $1").trim()}
-                  </span>
-                  <span className="font-medium text-slate-200">{val}</span>
-                </div>
-              ))}
-            </div>
+            <WeatherPanel weather={weather} loading={weatherLoading} error={weatherError} />
           </PanelCard>
 
           <PanelCard title="Emergency Facilities">
-            <div className="space-y-3">
-              {FACILITIES.map((f, i) => (
-                <div
-                  key={i}
-                  className="rounded-lg border border-slate-800/60 bg-slate-900/40 p-3"
-                >
-                  <p className="text-sm font-medium text-slate-200">{f.name}</p>
-                  {"beds" in f ? (
-                    <p className="mt-1 text-xs text-slate-400">
-                      {f.available}/{f.beds} beds available
-                    </p>
-                  ) : (
-                    <p className="mt-1 text-xs text-slate-400">
-                      {f.occupied}/{f.capacity} occupied
-                    </p>
-                  )}
-                  <p className="text-[11px] text-slate-500">{f.distance}</p>
-                </div>
-              ))}
-            </div>
+            <FacilitiesPanel
+              data={facilities}
+              loading={facilitiesLoading}
+              error={facilitiesError}
+              radius={facilityRadius}
+              onRadiusChange={setFacilityRadius}
+              hasLocation={hasFacilityLocation}
+            />
           </PanelCard>
 
           <PanelCard title="Recommendations">
