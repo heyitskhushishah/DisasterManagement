@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { classifyRisk, computeRiskScores } from "@/lib/ai-intelligence/scoring";
 import type { RiskClassification } from "@/lib/ai-intelligence/types";
-import type { FacilitiesData } from "@/lib/facilities/types";
-import type { WeatherData } from "@/lib/weather/types";
+import { useWeather } from "@/lib/hooks/use-weather";
+import { useFacilities } from "@/lib/hooks/use-facilities";
+import { useDisasterStore } from "@/lib/store/disasterStore";
 
 type RiskItem = {
   key: string;
@@ -77,21 +78,14 @@ function RiskGauge({ value, color, label }: { value: number; color: string; labe
   );
 }
 
-type AIIntelligencePanelProps = {
-  weather: WeatherData | null;
-  facilities: FacilitiesData | null;
-  severity: number;
-  populationAffected: number;
-  disasterType: string;
-};
-
-export function AIIntelligencePanel({
-  weather,
-  facilities,
-  severity,
-  populationAffected,
-  disasterType,
-}: AIIntelligencePanelProps) {
+export function AIIntelligencePanel() {
+  const latitude = useDisasterStore((s) => s.situation.latitude);
+  const longitude = useDisasterStore((s) => s.situation.longitude);
+  const severity = useDisasterStore((s) => s.situation.severity);
+  const populationAffected = useDisasterStore((s) => s.situation.populationAffected);
+  const disasterType = useDisasterStore((s) => s.situation.disasterType);
+  const { data: weather } = useWeather(latitude, longitude);
+  const { data: facilities } = useFacilities(latitude, longitude, 25000);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -103,8 +97,8 @@ export function AIIntelligencePanel({
       disasterType,
       severity,
       populationAffected,
-      weather,
-      facilities,
+      weather: weather ?? null,
+      facilities: facilities ?? null,
     });
 
     const data = {

@@ -4,13 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { ROUTE_COLORS, ROUTE_LABELS, type RouteData, type RouteIncidentOption, type RoutePoint } from "@/lib/routing/types";
 import { calculateRouteRisk } from "@/lib/routing/risk";
-import type { FacilitiesData, Facility } from "@/lib/facilities/types";
+import { computeWeatherImpactScore } from "@/lib/weather/impact-score";
+import { useWeather } from "@/lib/hooks/use-weather";
+import { useFacilities } from "@/lib/hooks/use-facilities";
+import { useDisasterStore } from "@/lib/store/disasterStore";
+import type { Facility } from "@/lib/facilities/types";
 
 type RoutePlannerPanelProps = {
   incidents: RouteIncidentOption[];
-  facilities: FacilitiesData | null;
-  weatherScore: number;
-  severity: number;
   routeData: RouteData | null;
   onRouteClear: () => void;
   loading: boolean;
@@ -19,14 +20,20 @@ type RoutePlannerPanelProps = {
 
 export function RoutePlannerPanel({
   incidents,
-  facilities,
-  weatherScore,
-  severity,
   routeData,
   onRouteClear,
   loading,
   onPlanRoute,
 }: RoutePlannerPanelProps) {
+  const latitude = useDisasterStore((s) => s.situation.latitude);
+  const longitude = useDisasterStore((s) => s.situation.longitude);
+  const severity = useDisasterStore((s) => s.situation.severity);
+  const { data: weather } = useWeather(latitude, longitude);
+  const { data: facilities } = useFacilities(latitude, longitude, 25000);
+  const weatherScore = useMemo(
+    () => (weather?.cities?.length ? computeWeatherImpactScore(weather.cities).score : 0),
+    [weather],
+  );
   const [selectedIncidentId, setSelectedIncidentId] = useState<string>("");
   const [selectedFacilityId, setSelectedFacilityId] = useState<string>("");
   const [showSuccess, setShowSuccess] = useState(false);

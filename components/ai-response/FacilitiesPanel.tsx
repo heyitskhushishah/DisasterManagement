@@ -1,7 +1,10 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { FacilitiesData } from "@/lib/facilities/types";
+import { useFacilities } from "@/lib/hooks/use-facilities";
+import { useDisasterStore } from "@/lib/store/disasterStore";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
 
 const RADIUS_OPTIONS = [
   { label: "5 km", value: 5000 },
@@ -25,22 +28,16 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 type FacilitiesPanelProps = {
-  data: FacilitiesData | null;
-  loading: boolean;
-  error: string | null;
-  radius: number;
-  onRadiusChange: (r: number) => void;
   hasLocation: boolean;
 };
 
-export function FacilitiesPanel({
-  data,
-  loading,
-  error,
-  radius,
-  onRadiusChange,
-  hasLocation,
-}: FacilitiesPanelProps) {
+export function FacilitiesPanel({ hasLocation }: FacilitiesPanelProps) {
+  const latitude = useDisasterStore((s) => s.situation.latitude);
+  const longitude = useDisasterStore((s) => s.situation.longitude);
+  const radius = useDisasterStore((s) => s.facilityRadius);
+  const setFacilityRadius = useDisasterStore((s) => s.setFacilityRadius);
+  const { data, isLoading: loading, error, refetch } = useFacilities(latitude, longitude, radius);
+
   const grouped = data
     ? (["hospital", "police", "fire_station", "shelter"] as const).reduce(
         (acc, type) => {
@@ -64,7 +61,7 @@ export function FacilitiesPanel({
           {RADIUS_OPTIONS.map((opt) => (
             <button
               key={opt.value}
-              onClick={() => onRadiusChange(opt.value)}
+              onClick={() => setFacilityRadius(opt.value)}
               className={cn(
                 "flex-1 rounded-lg border px-2 py-1.5 text-xs font-medium transition-colors",
                 radius === opt.value
@@ -85,11 +82,14 @@ export function FacilitiesPanel({
       )}
 
       {loading && (
-        <p className="text-sm text-slate-500">Searching nearby facilities...</p>
+        <div className="space-y-2">
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-3/4" />
+        </div>
       )}
 
       {error && !loading && (
-        <p className="text-xs text-amber-400/80">{error}</p>
+        <ErrorDisplay message={error.message} onRetry={() => refetch()} />
       )}
 
       {hasLocation && !loading && !error && total === 0 && (

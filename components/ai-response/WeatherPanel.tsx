@@ -2,14 +2,11 @@
 
 import { useMemo } from "react";
 import { computeWeatherImpactScore } from "@/lib/weather/impact-score";
-import type { WeatherData } from "@/lib/weather/types";
+import { useWeather } from "@/lib/hooks/use-weather";
+import { useDisasterStore } from "@/lib/store/disasterStore";
 import { cn } from "@/lib/utils";
-
-type WeatherPanelProps = {
-  weather: WeatherData | null;
-  loading: boolean;
-  error?: string | null;
-};
+import { Skeleton } from "@/components/ui/Skeleton";
+import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
 
 const CONDITION_ICONS: Record<string, string> = {
   thunderstorm: "⛈",
@@ -42,7 +39,11 @@ const SCORE_BG: Record<string, string> = {
   Critical: "bg-red-500/10 border-red-500/30",
 };
 
-export function WeatherPanel({ weather, loading, error }: WeatherPanelProps) {
+export function WeatherPanel() {
+  const latitude = useDisasterStore((s) => s.situation.latitude);
+  const longitude = useDisasterStore((s) => s.situation.longitude);
+  const { data: weather, isLoading: loading, error, refetch } = useWeather(latitude, longitude);
+
   const impact = useMemo(
     () => (weather?.cities?.length ? computeWeatherImpactScore(weather.cities) : null),
     [weather],
@@ -68,23 +69,18 @@ export function WeatherPanel({ weather, loading, error }: WeatherPanelProps) {
   return (
     <div className="space-y-3">
       {loading && (
-        <p className="text-sm text-slate-500">Loading weather data...</p>
+        <div className="space-y-2">
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-8 w-3/4" />
+          <Skeleton className="h-8 w-full" />
+        </div>
       )}
 
       {!loading && !weather && (
-        <div>
-          <p className="text-sm text-slate-500">
-            Weather data unavailable.
-          </p>
-          {error && (
-            <p className="mt-1 text-xs text-amber-400/80">{error}</p>
-          )}
-          {!error && (
-            <p className="mt-1 text-xs text-slate-600">
-              Set OPENWEATHER_API_KEY in .env.local and restart the dev server.
-            </p>
-          )}
-        </div>
+        <ErrorDisplay
+          message={error?.message ? String(error.message) : "Weather data unavailable."}
+          onRetry={() => refetch()}
+        />
       )}
 
       {!loading && weather && impact && (

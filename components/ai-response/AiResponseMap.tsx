@@ -6,9 +6,9 @@ import L from "leaflet";
 import { useEffect, useState } from "react";
 import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import { useDisasterStore } from "@/lib/store/disasterStore";
-import { normalizeEonetEvents, type EonetFeatureCollection } from "@/lib/map/eonet";
-import { normalizeGdacsEvents, type GdacsFeatureCollection } from "@/lib/map/gdacs";
-import { normalizeUsgsEvents, type UsgsFeatureCollection } from "@/lib/map/usgs";
+import { normalizeEonetEvents } from "@/lib/map/eonet";
+import { normalizeGdacsEvents } from "@/lib/map/gdacs";
+import { normalizeUsgsEvents } from "@/lib/map/usgs";
 import { EonetEventsLayer } from "@/components/EonetEventsLayer";
 import { GdacsEventsLayer } from "@/components/GdacsEventsLayer";
 import { UsgsEarthquakeLayer } from "@/components/ai-response/UsgsEarthquakeLayer";
@@ -16,8 +16,11 @@ import { FacilitiesLayer } from "@/components/ai-response/FacilitiesLayer";
 import { DispatchLayer } from "@/components/ai-response/DispatchLayer";
 import { RouteLayer } from "@/components/ai-response/RouteLayer";
 import type { DispatchMission } from "@/lib/dispatch/types";
-import type { FacilitiesData } from "@/lib/facilities/types";
 import type { RouteData } from "@/lib/routing/types";
+import { useEonetEvents } from "@/lib/hooks/use-eonet";
+import { useUsgsEvents } from "@/lib/hooks/use-usgs";
+import { useGdacsEvents } from "@/lib/hooks/use-gdacs";
+import { useFacilities } from "@/lib/hooks/use-facilities";
 import { INDIA_BOUNDS, INDIA_CENTER, INDIA_DEFAULT_ZOOM } from "@/lib/map/india-bounds";
 
 const PLACED_ICON = L.divIcon({
@@ -113,48 +116,28 @@ function LayerToggle({ label, active, color, onToggle }: LayerToggleProps) {
 }
 
 type AiResponseMapProps = {
-  eonetEvents?: EonetFeatureCollection | null;
-  gdacsEvents?: GdacsFeatureCollection | null;
-  usgsEvents?: UsgsFeatureCollection | null;
-  showEonet: boolean;
-  showGdacs: boolean;
-  showUsgs: boolean;
-  showRadar: boolean;
-  showFacilities: boolean;
-  facilitiesData: FacilitiesData | null;
   routeData: RouteData | null;
   dispatchMissions: DispatchMission[];
-  onToggleEonet: () => void;
-  onToggleGdacs: () => void;
-  onToggleUsgs: () => void;
-  onToggleRadar: () => void;
-  onToggleFacilities: () => void;
 };
 
-export function AiResponseMap({
-  eonetEvents,
-  gdacsEvents,
-  usgsEvents,
-  showEonet,
-  showGdacs,
-  showUsgs,
-  showRadar,
-  showFacilities,
-  facilitiesData,
-  routeData,
-  dispatchMissions,
-  onToggleEonet,
-  onToggleGdacs,
-  onToggleUsgs,
-  onToggleRadar,
-  onToggleFacilities,
-}: AiResponseMapProps) {
+export function AiResponseMap({ routeData, dispatchMissions }: AiResponseMapProps) {
   const latitude = useDisasterStore((s) => s.situation.latitude);
   const longitude = useDisasterStore((s) => s.situation.longitude);
+  const showEonet = useDisasterStore((s) => s.showEonet);
+  const showGdacs = useDisasterStore((s) => s.showGdacs);
+  const showUsgs = useDisasterStore((s) => s.showUsgs);
+  const showRadar = useDisasterStore((s) => s.showRadar);
+  const showFacilities = useDisasterStore((s) => s.showFacilities);
 
-  const eonet = normalizeEonetEvents(eonetEvents);
-  const gdacs = normalizeGdacsEvents(gdacsEvents);
-  const usgs = normalizeUsgsEvents(usgsEvents);
+  const { data: eonetEvents } = useEonetEvents();
+  const { data: usgsEvents } = useUsgsEvents();
+  const { data: gdacsEvents } = useGdacsEvents();
+  const facilityRadius = useDisasterStore((s) => s.facilityRadius);
+  const { data: facilitiesData } = useFacilities(latitude, longitude, facilityRadius);
+
+  const eonet = normalizeEonetEvents(eonetEvents ?? null);
+  const gdacs = normalizeGdacsEvents(gdacsEvents ?? null);
+  const usgs = normalizeUsgsEvents(usgsEvents ?? null);
   const hasLiveData = eonet.features.length > 0 || gdacs.features.length > 0 || usgs.features.length > 0;
 
   return (
@@ -175,7 +158,7 @@ export function AiResponseMap({
         <MapClickHandler />
         {!hasLiveData && <MapBoundsFitter />}
         <RadarLayer active={showRadar} />
-        <FacilitiesLayer data={facilitiesData} visible={showFacilities} />
+        <FacilitiesLayer data={facilitiesData ?? null} visible={showFacilities} />
         <RouteLayer data={routeData} visible={true} />
         <DispatchLayer missions={dispatchMissions} visible={true} />
         {showEonet && <EonetEventsLayer events={eonet} />}
@@ -212,31 +195,31 @@ export function AiResponseMap({
             label="EONET Events"
             active={showEonet}
             color="#7c3aed"
-            onToggle={onToggleEonet}
+            onToggle={useDisasterStore((s) => s.toggleEonet)}
           />
           <LayerToggle
             label="GDACS Events"
             active={showGdacs}
             color="#d97706"
-            onToggle={onToggleGdacs}
+            onToggle={useDisasterStore((s) => s.toggleGdacs)}
           />
           <LayerToggle
             label="USGS Earthquakes"
             active={showUsgs}
             color="#dc2626"
-            onToggle={onToggleUsgs}
+            onToggle={useDisasterStore((s) => s.toggleUsgs)}
           />
           <LayerToggle
             label="RainViewer Radar"
             active={showRadar}
             color="#06b6d4"
-            onToggle={onToggleRadar}
+            onToggle={useDisasterStore((s) => s.toggleRadar)}
           />
           <LayerToggle
             label="Emergency Facilities"
             active={showFacilities}
             color="#f59e0b"
-            onToggle={onToggleFacilities}
+            onToggle={useDisasterStore((s) => s.toggleFacilities)}
           />
         </div>
       </div>

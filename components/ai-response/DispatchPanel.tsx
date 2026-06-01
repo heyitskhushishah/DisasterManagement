@@ -2,39 +2,32 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import {
-  createMission,
-  tickMission,
-} from "@/lib/dispatch/simulation";
-import { STATUS_COLORS, type DispatchMission } from "@/lib/dispatch/types";
+import { createMission, tickMission } from "@/lib/dispatch/simulation";
+import { STATUS_COLORS } from "@/lib/dispatch/types";
+import { useDisasterStore } from "@/lib/store/disasterStore";
 import { cn } from "@/lib/utils";
 
 type DispatchPanelProps = {
-  incidentLat?: number | null;
-  incidentLng?: number | null;
-  incidentLabel?: string;
-  onMissionsChange?: (missions: DispatchMission[]) => void;
+  onMissionsChange?: (missions: import("@/lib/dispatch/types").DispatchMission[]) => void;
 };
 
-export function DispatchPanel({
-  incidentLat,
-  incidentLng,
-  incidentLabel,
-  onMissionsChange,
-}: DispatchPanelProps) {
-  const [missions, setMissions] = useState<DispatchMission[]>([]);
+export function DispatchPanel({ onMissionsChange }: DispatchPanelProps) {
+  const incidentLat = useDisasterStore((s) => s.situation.latitude);
+  const incidentLng = useDisasterStore((s) => s.situation.longitude);
+  const dispatchMissions = useDisasterStore((s) => s.dispatchMissions);
+  const setDispatchMissions = useDisasterStore((s) => s.setDispatchMissions);
   const [running, setRunning] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    onMissionsChange?.(missions);
-  }, [missions, onMissionsChange]);
+    onMissionsChange?.(dispatchMissions);
+  }, [dispatchMissions, onMissionsChange]);
 
   useEffect(() => {
-    if (running && missions.length > 0) {
+    if (running && dispatchMissions.length > 0) {
       intervalRef.current = setInterval(() => {
-        setMissions((prev) =>
-          prev
+        setDispatchMissions(
+          dispatchMissions
             .map((m) => tickMission(m))
             .filter((m) => !(m.status === "Completed" && Date.now() - m.createdAt > 120000)),
         );
@@ -47,21 +40,24 @@ export function DispatchPanel({
 
   const handleStart = () => {
     if (incidentLat == null || incidentLng == null) return;
-    const mission = createMission(incidentLat, incidentLng, incidentLabel ?? "Incident");
-    setMissions((prev) => [...prev, mission]);
+    const label = dispatchMissions.length > 0
+      ? dispatchMissions[0].incidentLabel
+      : "Incident";
+    const mission = createMission(incidentLat, incidentLng, label);
+    setDispatchMissions([...dispatchMissions, mission]);
     setRunning(true);
   };
 
   const handleClear = () => {
-    setMissions([]);
+    setDispatchMissions([]);
     setRunning(false);
   };
 
-  const allAssets = missions.flatMap((m) =>
+  const allAssets = dispatchMissions.flatMap((m) =>
     m.assets.map((a) => ({ ...a, missionLabel: m.incidentLabel })),
   );
   const activeAssets = allAssets.filter((a) => a.status !== "Completed");
-  const hasAny = missions.length > 0;
+  const hasAny = dispatchMissions.length > 0;
 
   return (
     <div className="space-y-3">
@@ -99,7 +95,7 @@ export function DispatchPanel({
 
       {hasAny && (
         <div className="max-h-[280px] space-y-2 overflow-y-auto pr-1">
-          {missions.map((mission) => {
+          {dispatchMissions.map((mission) => {
             const active = mission.assets.filter((a) => a.status !== "Completed");
             if (active.length === 0 && mission.assets.every((a) => a.status === "Completed")) {
               return (
