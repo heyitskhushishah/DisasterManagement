@@ -5,12 +5,16 @@ import { useEffect, useMemo, useState } from "react";
 
 import { DisasterSituationAnalysis } from "@/components/ai-response/DisasterSituationAnalysis";
 import { FacilitiesPanel } from "@/components/ai-response/FacilitiesPanel";
+import { ResourceAllocationPanel } from "@/components/ai-response/ResourceAllocationPanel";
+import { RoutePlannerPanel } from "@/components/ai-response/RoutePlannerPanel";
 import { WeatherPanel } from "@/components/ai-response/WeatherPanel";
 import { useDisasterStore } from "@/lib/store/disasterStore";
+import { computeWeatherImpactScore } from "@/lib/weather/impact-score";
 import { EMPTY_EONET_EVENTS, type EonetFeatureCollection } from "@/lib/map/eonet";
 import { EMPTY_GDACS_EVENTS, normalizeGdacsEvents, type GdacsFeatureCollection } from "@/lib/map/gdacs";
 import { EMPTY_USGS_EVENTS, formatUsgsTime, type UsgsFeatureCollection } from "@/lib/map/usgs";
 import type { FacilitiesData } from "@/lib/facilities/types";
+import type { RouteData, RouteIncidentOption } from "@/lib/routing/types";
 import type { WeatherData } from "@/lib/weather/types";
 import { cn } from "@/lib/utils";
 
@@ -26,13 +30,6 @@ type DisplayEvent = {
   detail: string;
   source: "EONET" | "USGS" | "GDACS";
 };
-
-const RESOURCES = [
-  { type: "Rescue Teams", deployed: 24, available: 8, icon: "🚁" },
-  { type: "Medical Units", deployed: 15, available: 5, icon: "🏥" },
-  { type: "Supply Drones", deployed: 40, available: 12, icon: "🛸" },
-  { type: "Food & Water", deployed: "18 tons", available: "6 tons", icon: "📦" },
-];
 
 const AI_INSIGHTS = [
   { risk: "Cyclone path likely to shift north-east", confidence: "82%", impact: "Chennai, Vizag" },
@@ -122,6 +119,9 @@ export function AiResponseDashboard() {
 
   const latitude = useDisasterStore((s) => s.situation.latitude);
   const longitude = useDisasterStore((s) => s.situation.longitude);
+  const disasterType = useDisasterStore((s) => s.situation.disasterType);
+  const severity = useDisasterStore((s) => s.situation.severity);
+  const populationAffected = useDisasterStore((s) => s.situation.populationAffected);
 
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(true);
@@ -132,6 +132,9 @@ export function AiResponseDashboard() {
   const [facilitiesError, setFacilitiesError] = useState<string | null>(null);
   const [facilityRadius, setFacilityRadius] = useState(25000);
   const [showFacilities, setShowFacilities] = useState(true);
+
+  const [routeData, setRouteData] = useState<RouteData | null>(null);
+  const [routeLoading, setRouteLoading] = useState(false);
 
   const weatherUrl = useMemo(() => {
     if (latitude != null && longitude != null) {
@@ -209,6 +212,23 @@ export function AiResponseDashboard() {
     fetchFacilities();
   }, [latitude, longitude, facilityRadius, hasFacilityLocation]);
 
+  const handlePlanRoute = async (from: { lat: number; lng: number }, to: { lat: number; lng: number }) => {
+    setRouteLoading(true);
+    try {
+      const res = await fetch(
+        `/api/graphhopper?fromLat=${from.lat}&fromLng=${from.lng}&toLat=${to.lat}&toLng=${to.lng}`,
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setRouteData({ ...data, from, to });
+      }
+    } catch {
+      console.warn("Route planning failed");
+    } finally {
+      setRouteLoading(false);
+    }
+  };
+
   const displayEvents: DisplayEvent[] = useMemo(() => {
     const events: DisplayEvent[] = [];
 
@@ -254,6 +274,49 @@ export function AiResponseDashboard() {
   }, [eonetEvents, usgsEvents, gdacsEvents]);
 
   const totalIncidents = eonetEvents.features.length + usgsEvents.features.length + gdacsEvents.features.length;
+
+  const routeIncidents: RouteIncidentOption[] = useMemo(() => {
+    const opts: RouteIncidentOption[] = [];
+    for (const f of eonetEvents.features) {
+      const p = f.properties;
+      const g = f.geometry;
+      if (!p || !g) continue;
+      opts.push({
+        id: `eonet-${p.id}`,
+        label: p.title,
+        lat: g.coordinates[1],
+        lng: g.coordinates[0],
+      });
+    }
+    for (const f of usgsEvents.features) {
+      const p = f.properties;
+      const g = f.geometry;
+      if (!p || !g) continue;
+      opts.push({
+        id: `usgs-${p.code}`,
+        label: p.place ?? "Earthquake",
+        lat: g.coordinates[1],
+        lng: g.coordinates[0],
+      });
+    }
+    for (const f of gdacsEvents.features) {
+      const p = f.properties;
+      const g = f.geometry;
+      if (!p || !g) continue;
+      opts.push({
+        id: `gdacs-${p.eventid}`,
+        label: p.eventname ?? p.name ?? "GDACS Event",
+        lat: g.coordinates[1],
+        lng: g.coordinates[0],
+      });
+    }
+    return opts.slice(0, 50);
+  }, [eonetEvents, usgsEvents, gdacsEvents]);
+
+  const weatherScore = useMemo(
+    () => (weather?.cities?.length ? computeWeatherImpactScore(weather.cities).score : 0),
+    [weather],
+  );
 
   return (
     <div className="dashboard-ops-bg flex min-h-screen flex-col">
@@ -366,21 +429,14 @@ export function AiResponseDashboard() {
           </PanelCard>
 
           <PanelCard title="Resource Allocation">
-            <div className="space-y-3">
-              {RESOURCES.map((r) => (
-                <div key={r.type} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">{r.icon}</span>
-                    <span className="text-sm text-slate-300">{r.type}</span>
-                  </div>
-                  <div className="text-right text-xs">
-                    <span className="text-teal-400">{r.deployed}</span>
-                    <span className="text-slate-600"> / </span>
-                    <span className="text-slate-400">{r.available}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <ResourceAllocationPanel
+              inputs={{
+                disasterType,
+                severity,
+                populationAffected,
+                weatherScore,
+              }}
+            />
           </PanelCard>
 
           <PanelCard title="AI Insights">
@@ -417,6 +473,7 @@ export function AiResponseDashboard() {
               showRadar={showRadar}
               showFacilities={showFacilities}
               facilitiesData={facilities}
+              routeData={routeData}
               onToggleEonet={() => setShowEonet((v) => !v)}
               onToggleGdacs={() => setShowGdacs((v) => !v)}
               onToggleUsgs={() => setShowUsgs((v) => !v)}
@@ -442,15 +499,17 @@ export function AiResponseDashboard() {
             />
           </PanelCard>
 
-          <PanelCard title="Recommendations">
-            <ul className="space-y-2">
-              {RECOMMENDATIONS.map((rec, i) => (
-                <li key={i} className="flex gap-2 text-sm">
-                  <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-teal-500" />
-                  <span className="text-slate-300">{rec}</span>
-                </li>
-              ))}
-            </ul>
+          <PanelCard title="Route Planner">
+            <RoutePlannerPanel
+              incidents={routeIncidents}
+              facilities={facilities}
+              weatherScore={weatherScore}
+              severity={severity}
+              routeData={routeData}
+              onRouteClear={() => setRouteData(null)}
+              loading={routeLoading}
+              onPlanRoute={handlePlanRoute}
+            />
           </PanelCard>
         </aside>
       </div>

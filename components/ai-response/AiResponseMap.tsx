@@ -13,7 +13,9 @@ import { EonetEventsLayer } from "@/components/EonetEventsLayer";
 import { GdacsEventsLayer } from "@/components/GdacsEventsLayer";
 import { UsgsEarthquakeLayer } from "@/components/ai-response/UsgsEarthquakeLayer";
 import { FacilitiesLayer } from "@/components/ai-response/FacilitiesLayer";
+import { RouteLayer } from "@/components/ai-response/RouteLayer";
 import type { FacilitiesData } from "@/lib/facilities/types";
+import type { RouteData } from "@/lib/routing/types";
 import { INDIA_BOUNDS, INDIA_CENTER, INDIA_DEFAULT_ZOOM } from "@/lib/map/india-bounds";
 
 const PLACED_ICON = L.divIcon({
@@ -118,6 +120,7 @@ type AiResponseMapProps = {
   showRadar: boolean;
   showFacilities: boolean;
   facilitiesData: FacilitiesData | null;
+  routeData: RouteData | null;
   onToggleEonet: () => void;
   onToggleGdacs: () => void;
   onToggleUsgs: () => void;
@@ -135,6 +138,7 @@ export function AiResponseMap({
   showRadar,
   showFacilities,
   facilitiesData,
+  routeData,
   onToggleEonet,
   onToggleGdacs,
   onToggleUsgs,
@@ -168,6 +172,7 @@ export function AiResponseMap({
         {!hasLiveData && <MapBoundsFitter />}
         <RadarLayer active={showRadar} />
         <FacilitiesLayer data={facilitiesData} visible={showFacilities} />
+        <RouteLayer data={routeData} visible={true} />
         {showEonet && <EonetEventsLayer events={eonet} />}
         {showGdacs && (
           <GdacsEventsLayer

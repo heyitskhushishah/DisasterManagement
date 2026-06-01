@@ -24,17 +24,10 @@ function etaMinutes(type: FacilityType, distKm: number): number {
 
 const FACILITY_QUERIES = [
   `node["amenity"="hospital"](around:RADIUS,LAT,LNG);`,
-  `way["amenity"="hospital"](around:RADIUS,LAT,LNG);`,
   `node["amenity"="police"](around:RADIUS,LAT,LNG);`,
-  `way["amenity"="police"](around:RADIUS,LAT,LNG);`,
   `node["amenity"="fire_station"](around:RADIUS,LAT,LNG);`,
-  `way["amenity"="fire_station"](around:RADIUS,LAT,LNG);`,
-  `node["emergency"="disaster_response"](around:RADIUS,LAT,LNG);`,
-  `way["emergency"="disaster_response"](around:RADIUS,LAT,LNG);`,
   `node["emergency"="shelter"](around:RADIUS,LAT,LNG);`,
-  `way["emergency"="shelter"](around:RADIUS,LAT,LNG);`,
   `node["amenity"="shelter"](around:RADIUS,LAT,LNG);`,
-  `way["amenity"="shelter"](around:RADIUS,LAT,LNG);`,
 ];
 
 type OverpassElement = {
@@ -65,13 +58,13 @@ export const GET = async (req: Request) => {
       q.replace("RADIUS", String(radius)).replace("LAT", String(lat)).replace("LNG", String(lng)),
     );
 
-    const overpassQl = `[out:json][timeout:20];(${queries.join("")});out center body 80;`;
+    const overpassQl = `[out:json][timeout:15][maxsize:2097152];(${queries.join("")});out center body 20;`;
 
     const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQl)}`;
 
     const res = await fetch(url, {
       headers: { "User-Agent": "DisasterMgmt/1.0" },
-      signal: AbortSignal.timeout(25000),
+      signal: AbortSignal.timeout(30000),
     });
 
     if (!res.ok) {
@@ -90,7 +83,6 @@ export const GET = async (req: Request) => {
       hospital: "hospital",
       police: "police",
       fire_station: "fire_station",
-      disaster_response: "shelter",
       shelter: "shelter",
     };
 
