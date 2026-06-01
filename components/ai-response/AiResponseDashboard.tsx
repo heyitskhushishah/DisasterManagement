@@ -5,6 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 
 import { DisasterSituationAnalysis } from "@/components/ai-response/DisasterSituationAnalysis";
 import { FacilitiesPanel } from "@/components/ai-response/FacilitiesPanel";
+import { AIIntelligencePanel } from "@/components/ai-response/AIIntelligencePanel";
+import { DispatchPanel } from "@/components/ai-response/DispatchPanel";
 import { ResourceAllocationPanel } from "@/components/ai-response/ResourceAllocationPanel";
 import { RoutePlannerPanel } from "@/components/ai-response/RoutePlannerPanel";
 import { WeatherPanel } from "@/components/ai-response/WeatherPanel";
@@ -13,6 +15,7 @@ import { computeWeatherImpactScore } from "@/lib/weather/impact-score";
 import { EMPTY_EONET_EVENTS, type EonetFeatureCollection } from "@/lib/map/eonet";
 import { EMPTY_GDACS_EVENTS, normalizeGdacsEvents, type GdacsFeatureCollection } from "@/lib/map/gdacs";
 import { EMPTY_USGS_EVENTS, formatUsgsTime, type UsgsFeatureCollection } from "@/lib/map/usgs";
+import type { DispatchMission } from "@/lib/dispatch/types";
 import type { FacilitiesData } from "@/lib/facilities/types";
 import type { RouteData, RouteIncidentOption } from "@/lib/routing/types";
 import type { WeatherData } from "@/lib/weather/types";
@@ -135,6 +138,7 @@ export function AiResponseDashboard() {
 
   const [routeData, setRouteData] = useState<RouteData | null>(null);
   const [routeLoading, setRouteLoading] = useState(false);
+  const [dispatchMissions, setDispatchMissions] = useState<DispatchMission[]>([]);
 
   const weatherUrl = useMemo(() => {
     if (latitude != null && longitude != null) {
@@ -439,25 +443,27 @@ export function AiResponseDashboard() {
             />
           </PanelCard>
 
-          <PanelCard title="AI Insights">
-            <div className="space-y-3">
-              {AI_INSIGHTS.map((insight, i) => (
-                <div
-                  key={i}
-                  className="rounded-lg border border-teal-900/30 bg-teal-950/20 p-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-teal-300">
-                      {insight.confidence} confidence
-                    </span>
-                  </div>
-                  <p className="mt-1 text-sm text-slate-200">{insight.risk}</p>
-                  <p className="mt-0.5 text-xs text-slate-500">
-                    Impact: {insight.impact}
-                  </p>
-                </div>
-              ))}
-            </div>
+          <PanelCard title="AI Intelligence">
+            <AIIntelligencePanel
+              weather={weather}
+              facilities={facilities}
+              severity={severity}
+              populationAffected={populationAffected}
+              disasterType={disasterType}
+            />
+          </PanelCard>
+
+          <PanelCard title="Dispatch Simulation">
+            <DispatchPanel
+              incidentLat={latitude}
+              incidentLng={longitude}
+              incidentLabel={
+                displayEvents.length > 0
+                  ? displayEvents[0].label
+                  : "Selected Location"
+              }
+              onMissionsChange={setDispatchMissions}
+            />
           </PanelCard>
         </aside>
 
@@ -474,6 +480,7 @@ export function AiResponseDashboard() {
               showFacilities={showFacilities}
               facilitiesData={facilities}
               routeData={routeData}
+              dispatchMissions={dispatchMissions}
               onToggleEonet={() => setShowEonet((v) => !v)}
               onToggleGdacs={() => setShowGdacs((v) => !v)}
               onToggleUsgs={() => setShowUsgs((v) => !v)}
