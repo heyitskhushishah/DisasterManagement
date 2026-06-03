@@ -3,8 +3,10 @@ import type { GdacsAlertLevel } from "@/lib/map/gdacs";
 export type DashboardProfile = {
   full_name: string;
   username: string;
-  role: string;
+  app_role: string;
   organization: string | null;
+  city: string | null;
+  state: string | null;
   phone: string | null;
   emergency_contact: string | null;
   created_at: string;

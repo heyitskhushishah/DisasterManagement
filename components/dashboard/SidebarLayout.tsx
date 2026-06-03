@@ -4,7 +4,9 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Sidebar, type TabId } from "@/components/dashboard/Sidebar";
+import { RoleNav } from "@/components/sos/RoleNav";
 import { signOut } from "@/lib/auth/actions";
+import type { AppRole } from "@/lib/sos/roles";
 
 const AiResponseDashboard = dynamic(
   () => import("@/components/ai-response/AiResponseDashboard").then((m) => m.AiResponseDashboard),
@@ -13,7 +15,7 @@ const AiResponseDashboard = dynamic(
 
 type SidebarLayoutProps = {
   children: React.ReactNode;
-  role: string;
+  appRole: AppRole;
 };
 
 const PlaceholderContent = ({ label }: { label: string }) => (
@@ -35,12 +37,12 @@ const TAB_CONTENT: Record<TabId, { label: string }> = {
   hospitals: { label: "Hospitals and Shelters" },
   analytics: { label: "Incident History and Analytics" },
   "data-contribution": { label: "Data Contribution Feature" },
-  sos: { label: "SOS Form" },
+  sos: { label: "SOS Emergency" },
 };
 
 export const SidebarLayout = ({
   children,
-  role,
+  appRole,
 }: SidebarLayoutProps) => {
   const [activeTab, setActiveTab] = useState<TabId>("operations");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -84,8 +86,21 @@ export const SidebarLayout = ({
   const content = useMemo(() => {
     if (activeTab === "operations") return children;
     if (activeTab === "ai-intel") return <AiResponseDashboard />;
+    if (activeTab === "sos") {
+      return (
+        <div className="mx-auto max-w-3xl space-y-6">
+          <div className="dashboard-panel rounded-2xl border border-slate-800/60 p-6">
+            <h2 className="mb-4 text-lg font-semibold text-slate-100">SOS Emergency Center</h2>
+            <p className="mb-6 text-sm text-slate-400">
+              Access SOS request forms and view emergency requests based on your role.
+            </p>
+            <RoleNav role={appRole} />
+          </div>
+        </div>
+      );
+    }
     return <PlaceholderContent label={TAB_CONTENT[activeTab].label} />;
-  }, [activeTab, children]);
+  }, [activeTab, children, appRole]);
 
   return (
     <div className="flex min-h-screen">
@@ -95,7 +110,7 @@ export const SidebarLayout = ({
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } lg:relative lg:translate-x-0`}
       >
-        <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
+        <Sidebar activeTab={activeTab} onTabChange={handleTabChange} appRole={appRole} />
       </div>
 
       {sidebarOpen && (
@@ -142,7 +157,7 @@ export const SidebarLayout = ({
 
           <div className="flex shrink-0 items-center gap-3">
             <span className="hidden rounded-full border border-teal-500/30 bg-teal-500/10 px-3 py-1 text-xs font-medium text-teal-200 sm:inline-flex">
-              {role}
+              {appRole === "civilian" ? "Civilian" : appRole === "coordinator" ? "Coordinator" : appRole === "rescue_team" ? "Rescue Team" : appRole === "ambulance_team" ? "Ambulance Team" : appRole === "fire_response" ? "Fire Response" : appRole}
             </span>
             <form action={signOut}>
               <button

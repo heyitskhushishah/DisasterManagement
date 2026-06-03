@@ -11,5 +11,7 @@ export function getSupabaseEnv() {
     );
   }
 
-  return { supabaseUrl, supabaseAnonKey };
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  return { supabaseUrl, supabaseAnonKey, supabaseServiceRoleKey };
 }

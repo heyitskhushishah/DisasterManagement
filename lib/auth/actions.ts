@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export type AuthActionState = {
   error?: string;
+  success?: string;
 };
 
 function normalizeIdentifier(value: string) {
@@ -68,6 +69,8 @@ export async function signUp(
   const email = String(formData.get("email") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
   const organization = String(formData.get("organization") ?? "").trim();
+  const city = String(formData.get("city") ?? "").trim();
+  const state = String(formData.get("state") ?? "").trim();
   const role = String(formData.get("role") ?? "Volunteer");
   const password = String(formData.get("password") ?? "");
   const confirmPassword = String(formData.get("confirmPassword") ?? "");
@@ -88,27 +91,32 @@ export async function signUp(
     };
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        full_name: fullName,
-        username,
-        phone,
-        organization,
-        role,
-        emergency_contact: emergencyContact,
-      },
-    },
-  });
+  try {
+    const supabase = await createClient();
 
-  if (error) {
-    return { error: error.message };
+    const { data: userId, error: rpcError } = await supabase.rpc("register_user", {
+      p_email: email,
+      p_password: password,
+      p_username: username,
+      p_full_name: fullName,
+      p_phone: phone,
+      p_organization: organization,
+      p_city: city,
+      p_state: state,
+      p_role: role,
+      p_emergency_contact: emergencyContact,
+    });
+
+    if (rpcError || !userId) {
+      console.error("Register RPC failed:", rpcError);
+      return { error: rpcError?.message ?? "Registration failed. Please try again." };
+    }
+  } catch (err) {
+    console.error("Signup exception:", err);
+    return { error: "Registration failed. Please try again." };
   }
 
-  redirect(AUTH_ROUTES.dashboard);
+  return { success: "Account created successfully! You can now log in." };
 }
 
 export async function signOut() {

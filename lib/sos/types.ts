@@ -45,7 +45,8 @@ export type Profile = {
   email: string;
   phone: string | null;
   organization: string | null;
-  role: string;
+  city: string | null;
+  state: string | null;
   emergency_contact: string | null;
   avatar_url: string | null;
   created_at: string;

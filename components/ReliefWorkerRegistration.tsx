@@ -6,13 +6,20 @@ import { AUTH_ROUTES } from "@/lib/auth/routes";
 import { signUp, type AuthActionState } from "@/lib/auth/actions";
 
 const ROLES = [
-  "Rescue Worker",
-  "Medical Staff",
-  "Volunteer",
-  "Fire Department",
-  "Police",
-  "Disaster Coordinator",
+  "civilian",
+  "coordinator",
+  "rescue_team",
+  "ambulance_team",
+  "fire_response",
 ] as const;
+
+const ROLE_DISPLAY: Record<string, string> = {
+  civilian: "Civilian",
+  coordinator: "Coordinator",
+  rescue_team: "Rescue Team",
+  ambulance_team: "Ambulance Team",
+  fire_response: "Fire Response",
+};
 
 type PasswordStrength = "empty" | "weak" | "fair" | "good" | "strong";
 
@@ -82,6 +89,15 @@ function IconBuilding({ className }: { className?: string }) {
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
       <path strokeLinecap="round" strokeLinejoin="round" d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-3" />
       <path strokeLinecap="round" d="M9 9v.01M9 12v.01M9 15v.01M9 18v.01" />
+    </svg>
+  );
+}
+
+function IconMapPin({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+      <circle cx="12" cy="10" r="3" />
     </svg>
   );
 }
@@ -215,6 +231,8 @@ export default function ReliefWorkerRegistration() {
     email: "",
     phone: "",
     organization: "",
+    city: "",
+    state: "",
     role: ROLES[0],
     password: "",
     confirmPassword: "",
@@ -243,6 +261,41 @@ export default function ReliefWorkerRegistration() {
       return;
     }
   };
+
+  if (state.success) {
+    return (
+      <div className="relative min-h-screen overflow-hidden font-sans">
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage:
+              "url('https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=2400&q=80')",
+          }}
+          aria-hidden
+        />
+        <div className="absolute inset-0 bg-slate-950/75 backdrop-blur-[2px]" aria-hidden />
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-950/90 via-cyan-950/40 to-slate-900/95" aria-hidden />
+        <div className="relative z-10 flex min-h-screen items-center justify-center px-4">
+          <div className="w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-8 text-center shadow-2xl shadow-black/50 backdrop-blur-xl">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/20">
+              <svg className="h-8 w-8 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-semibold text-white">Registration Successful</h2>
+            <p className="mt-3 text-sm text-white/60">{state.success}</p>
+            <Link
+              href={AUTH_ROUTES.login}
+              className="mt-6 inline-flex rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-cyan-500/25 transition hover:from-cyan-400 hover:to-cyan-500"
+            >
+              Go to Login
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen overflow-hidden font-sans">
@@ -275,7 +328,7 @@ export default function ReliefWorkerRegistration() {
             Disaster Response Network
           </div>
           <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl lg:text-4xl">
-            Emergency Relief Worker Registration
+            Emergency Response Registration
           </h1>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-white/60 sm:text-base">
             Join the disaster response network and help coordinate emergency rescue
@@ -337,14 +390,35 @@ export default function ReliefWorkerRegistration() {
                     value={form.phone}
                     onChange={(v) => update("phone", v)}
                   />
-                  <InputField
-                    id="organization"
-                    label="Organization / NGO Name"
-                    icon={<IconBuilding className="h-4 w-4" />}
-                    placeholder="Relief organization name"
-                    value={form.organization}
-                    onChange={(v) => update("organization", v)}
-                  />
+                  {form.role === "civilian" ? (
+                    <>
+                      <InputField
+                        id="state"
+                        label="State"
+                        icon={<IconMapPin className="h-4 w-4" />}
+                        placeholder="e.g. Gujarat"
+                        value={form.state}
+                        onChange={(v) => update("state", v)}
+                      />
+                      <InputField
+                        id="city"
+                        label="City"
+                        icon={<IconMapPin className="h-4 w-4" />}
+                        placeholder="e.g. Ahmedabad"
+                        value={form.city}
+                        onChange={(v) => update("city", v)}
+                      />
+                    </>
+                  ) : (
+                    <InputField
+                      id="organization"
+                      label="Organization / NGO Name"
+                      icon={<IconBuilding className="h-4 w-4" />}
+                      placeholder="Relief organization name"
+                      value={form.organization}
+                      onChange={(v) => update("organization", v)}
+                    />
+                  )}
                 </div>
 
                 <label htmlFor="role" className="block">
@@ -364,7 +438,7 @@ export default function ReliefWorkerRegistration() {
                     >
                       {ROLES.map((role) => (
                         <option key={role} value={role} className="bg-slate-900 text-white">
-                          {role}
+                          {ROLE_DISPLAY[role]}
                         </option>
                       ))}
                     </select>
@@ -470,7 +544,7 @@ export default function ReliefWorkerRegistration() {
                   disabled={isPending}
                   className="w-full rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-600 py-3.5 text-sm font-semibold tracking-wide text-white shadow-lg shadow-cyan-500/25 transition hover:from-cyan-400 hover:to-cyan-500 hover:shadow-cyan-500/40 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isPending ? "Creating account…" : "Register as Relief Worker"}
+                  {isPending ? "Creating account…" : "Create Account"}
                 </button>
 
                 <p className="text-center text-sm text-white/50">

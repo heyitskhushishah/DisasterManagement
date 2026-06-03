@@ -64,17 +64,24 @@ export const OperatorProfile = ({ profile, email }: OperatorProfileProps) => {
       </div>
 
       <dl className="mt-4 grid gap-3 sm:grid-cols-2">
-        <ProfileField label="Role" value={profile?.role ?? "—"} />
+        <ProfileField label="Role" value={profile?.app_role?.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()) ?? "—"} />
         <ProfileField
           label="Member since"
           value={formatMemberSince(profile?.created_at)}
         />
-        <div className="sm:col-span-2">
-          <ProfileField
-            label="Organization"
-            value={profile?.organization ?? "Not specified"}
-          />
-        </div>
+        {profile?.state ? (
+          <>
+            <ProfileField label="State" value={profile.state} />
+            <ProfileField label="City" value={profile.city ?? "—"} />
+          </>
+        ) : (
+          <div className="sm:col-span-2">
+            <ProfileField
+              label="Organization"
+              value={profile?.organization ?? "Not specified"}
+            />
+          </div>
+        )}
         <ProfileField label="Email" value={email} />
         <ProfileField label="Phone" value={profile?.phone ?? "Not provided"} />
         <div className="sm:col-span-2">

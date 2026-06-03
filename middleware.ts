@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { AUTH_ROUTES, isAuthPage, isPublicPath } from "@/lib/auth/routes";
-import { updateSession } from "@/lib/supabase/middleware";
+import { updateSession, checkRouteAccess } from "@/lib/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -28,6 +28,16 @@ export async function middleware(request: NextRequest) {
     url.pathname = AUTH_ROUTES.login;
     url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
+  }
+
+  // Role-based route protection
+  if (isAuthenticated && (pathname.startsWith("/sos") || pathname.startsWith("/admin"))) {
+    const { allowed, redirectTo } = checkRouteAccess(pathname, user);
+    if (!allowed && redirectTo) {
+      const url = request.nextUrl.clone();
+      url.pathname = redirectTo;
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;

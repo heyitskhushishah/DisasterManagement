@@ -11,6 +11,7 @@ import { StatCards } from "@/components/dashboard/StatCards";
 import { IndiaMapSection } from "@/components/IndiaMapSection";
 import { computeDashboardStats } from "@/lib/dashboard/compute-stats";
 import { fetchDashboardEvents } from "@/lib/dashboard/fetch-events";
+import type { AppRole } from "@/lib/sos/roles";
 import type { DashboardProfile } from "@/lib/dashboard/types";
 import { AUTH_ROUTES } from "@/lib/auth/routes";
 import { createClient } from "@/lib/supabase/server";
@@ -29,7 +30,7 @@ export default async function DashboardPage() {
     supabase
       .from("profiles")
       .select(
-        "full_name, username, role, organization, phone, emergency_contact, created_at",
+        "full_name, username, app_role, organization, city, state, phone, emergency_contact, created_at",
       )
       .eq("id", user.id)
       .single(),
@@ -42,12 +43,15 @@ export default async function DashboardPage() {
     events.historicalGdacsEvents,
   );
 
+  const appRole: AppRole = (profile?.app_role as AppRole) ?? "civilian";
   const dashboardProfile: DashboardProfile | null = profile
     ? {
         full_name: profile.full_name,
         username: profile.username,
-        role: profile.role,
+        app_role: profile.app_role,
         organization: profile.organization,
+        city: profile.city,
+        state: profile.state,
         phone: profile.phone,
         emergency_contact: profile.emergency_contact,
         created_at: profile.created_at,
@@ -56,9 +60,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="dashboard-ops-bg min-h-screen">
-      <SidebarLayout
-        role={dashboardProfile?.role ?? "Relief worker"}
-      >
+      <SidebarLayout appRole={appRole}>
         <AlertStatusBar
           highestAlert={stats.highestAlert}
           liveEventCount={stats.liveEventCount}
